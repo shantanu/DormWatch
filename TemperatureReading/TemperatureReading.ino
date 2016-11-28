@@ -5,9 +5,9 @@ const int sensorPin = A0;
 const float baselineTemp = 20.0;
 
 /*Variables for Time Graphing*/
-unsigned long previousTemp = 0;
+unsigned long previousTime = 0;
+long interval = 1000; //5 Seconds
 
-long interval = 5000; //5 Seconds
 
 /*Variables for Averaging Temp in a Given Time */
 unsigned long currentSum = 0;
@@ -22,7 +22,7 @@ unsigned long numTemps = 0;
 
 #define MAX 16
 
-int intArray[MAX];
+float intArray[MAX];
 int front = 0;
 int rear = -1;
 int itemCount = 0;
@@ -54,6 +54,17 @@ void insert(int data) {
       intArray[++rear] = data;
       itemCount++;
    }
+}
+
+int removeData() {
+   int data = intArray[front++];
+  
+   if(front == MAX) {
+      front = 0;
+   }
+  
+   itemCount--;
+   return data;  
 }
 
 
@@ -164,6 +175,7 @@ void setup() {
   /* Each of the Lines of the Graph is Set up as a custom char 
      See https://www.arduino.cc/en/Reference/LiquidCrystalCreateChar
   */
+  
   lcd.createChar(0, one_line);
   lcd.createChar(1, two_line);
   lcd.createChar(2, three_line);
@@ -179,33 +191,55 @@ void setup() {
   
 }
 
+void graph(){
+  lcd.setCursor(0, 1);
+
+  for (int i = 0; i < MAX; i++) {
+    float graphReading = intArray[i];
+    if (graphReading == 0) lcd.print(" ");
+    if (graphReading >= 0 && graphReading < 100) lcd.write(byte(0));
+    if (graphReading >= 000 && graphReading < 200) lcd.write(byte(1));
+    if (graphReading >= 200 && graphReading < 300) lcd.write(byte(2));
+    if (graphReading >= 300 && graphReading < 400) lcd.write(byte(3));
+    if (graphReading >= 400 && graphReading < 500) lcd.write(byte(4));
+    if (graphReading >= 500 && graphReading < 600) lcd.write(byte(5));
+    if (graphReading >= 600 && graphReading < 700) lcd.write(byte(6));
+    if (graphReading >= 700) lcd.write(byte(7));
+    
+
+    
+    
+  }
+}
+
 void loop() {
   /* Code to Analyze Sensor Readings*/
       int sensorVal = analogRead(sensorPin);
       Serial.print("Sensor Value: ");
       Serial.print(sensorVal);
-    
+    /*
       //convert the ADC reading to voltage
       float voltage = (sensorVal/1024.0) * 5.0;
     
-      Serial.print(", Volts: ");
-      Serial.print(voltage);
+      //Serial.print(", Volts: ");
+      //Serial.print(voltage);
     
       //convert the voltage to temperature in degrees
-      Serial.print(", degrees C: ");
+      //Serial.print(", degrees C: ");
       float celcius = (voltage - .5) * 100;
-      Serial.print(celcius);
+      //Serial.print(celcius);
     
       float fahrenheit = celcius * 1.8 + 32;
-      Serial.print(", degrees F: ");
-      Serial.println(fahrenheit);
-    
+      //Serial.print(", degrees F: ");
+      //Serial.println(fahrenheit);
+    */
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Temp: ");
-      lcd.setCursor(6, 0);
-      lcd.print(fahrenheit);
+      lcd.print("Noise: ");
+      lcd.setCursor(8, 0);
+      lcd.print(sensorVal);
       lcd.setCursor(0, 1);
+      /*
       lcd.write(byte(0));
       lcd.write(byte(1));
       lcd.write(byte(2));
@@ -214,9 +248,35 @@ void loop() {
       lcd.write(byte(5));
       lcd.write(byte(6));
       lcd.write(byte(7));
-      
+      */
 
-  /* Code to Graph the Temp over a period of time */
+  /* Insert the Averaged Time into the Queue to Graph */
+  unsigned long currentTime = millis();
+  if (currentTime - previousTime < interval) {
+    numTemps++;
+    currentSum += sensorVal;
+  }
+
+  if (currentTime - previousTime > interval) {
+    previousTime = currentTime;
+    
+    if (isFull()){
+      removeData();
+    }
+    
+    insert(sensorVal);
+    //insert (currentSum / 1.0*numTemps);
+    numTemps = 0;
+    currentSum = 0;
+    for (int i = 0; i < MAX; i++) {
+      Serial.print(intArray[i]);
+      Serial.print(" ");
+    }
+    Serial.println(" ");    
+  }
+  //graph();
+  delay(10);
+
   
 
   
