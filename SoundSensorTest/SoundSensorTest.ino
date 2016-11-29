@@ -1,8 +1,21 @@
+/*
+ * THIS CODE LISTENS TO VALUES FROM THE SOUND SENSOR
+ * AND THEN IMPLEMENTS THE FOLLOWING ALGORITHM FOR DETERMINING 
+ * WHETHER THE NOISE LEVEL IS TOO HIGH:
+ * 
+ * THRESHOLD VALUE FOR THE SOUND SENSOR IS WHEN IT IS TOO LOUD AT A GIVEN INSTANT
+ * COUNTER IS HOW MANY TIMES THE SOUND SENSOR VALUE EXCEEDS THE THRESHOLD IN THE GIVEN INTERVAL
+ * LCDTHRESHOLD IS THE THRESHOLD VALUE FOR COUNTER BEFORE THE LED LIGHTS UP
+ * 
+ * THE LCD DISPLAYS THE SOUND SENSOR LEVEL AND THE COUNTER.
+ */
+
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 const int sensorPin = A0;
 const int lightPin = 8;
+const int piezoPin = 8;
 
 const int threshold = 25;
 long counter = 0;
@@ -44,7 +57,9 @@ void loop() {
     if (counter > lcdThreshold){
       digitalWrite(8, HIGH);
       lcd.setCursor(12, 0);
-      lcd.print("STFU");
+      //lcd.clear();
+      lcd.print("Shhhh");
+      tone(7, 440, 5);
     }
     else{
       digitalWrite(8, LOW);

@@ -275,16 +275,5 @@ void loop() {
     Serial.println(" ");    
   }
   //graph();
-  delay(10);
-
-  
-
-  
-  
+  delay(10); 
 }
-
-
-
-
-
-
