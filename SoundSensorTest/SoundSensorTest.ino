@@ -17,12 +17,12 @@ const int sensorPin = A0;
 const int lightPin = 8;
 const int piezoPin = 8;
 
-const int threshold = 50;
+const int threshold = 50;//50
 long counter = 0;
-const int ledThreshold = 80;
+const int ledThreshold = 80;//80
 
 unsigned long previousTime = 0;
-unsigned long currentTime = 0;
+
 long interval = 25000; //10 secs
 
 byte eight_line[8] = {
@@ -47,6 +47,18 @@ byte threshold_line[8] = {
   B00110,
 };
 
+void noiseBar(int sensorVal){
+   // Place the threshold line on the 8th box on the 2nd row
+   lcd.setCursor(10, 1);
+   lcd.write(byte(1));
+   sensorVal = max(0, min(sensorVal, 80));
+   int numBoxes = sensorVal/5;
+   for(int i = 0; i <= numBoxes; i++){
+    lcd.setCursor(i, 1);
+    lcd.write(byte(0));
+   }
+}
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -59,7 +71,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  currentTime = millis();
 
   int sensorVal = analogRead(A0);
   Serial.println(sensorVal);
@@ -75,31 +86,49 @@ void loop() {
   lcd.print(counter);
   noiseBar(sensorVal);
   
-  // While we are within the current 25 second period
-  if (currentTime - previousTime < interval) {
-    // Increase the counter if the sensor value exceeds the sound threshold
-    if (sensorVal > threshold) {
-      counter++;
-    }
-    
-    // The LED must light up for 15 seconds if 
-    // the sound level is exceeded for a given amount of time, in this case
-    // when the counter exceeds 80. 
-    if (counter > ledThreshold) {
-      highNoise();
 
-       // After the current period is over, turn the LED off, and the tone will 
-       // automatically stop playing.
-       digitalWrite(8, LOW);
-       previousTime = millis();
-       counter = 0;
-    }
+  // Increase the counter if the sensor value exceeds the sound threshold
+  if (sensorVal > threshold) {
+    counter++;
   }
+  
+  // The LED must light up for 15 seconds if 
+  // the sound level is exceeded for a given amount of time, in this case
+  // when the counter exceeds 80. 
+  if (counter > ledThreshold) {
+    //highNoise();
+    unsigned long timeStart = millis();
+  
+    // Print a message telling people to be quiet
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("SHHHHHHHHHHH");
+    lcd.setCursor(0, 1);
+    lcd.print("BE QUIET!!!!"); 
+    // Turn the LED on
+    digitalWrite(8, HIGH);
+  
+    // Keep the message on the lcd screen and the led on for 15 seconds
+    while (millis() - timeStart < 15000) {
+      // play a tone to annoy people
+      tone(7, 440, 5);
+      
+      // magical wait statement
+      delay(5);
+     }
+     
+     // After the current period is over, turn the LED off, and the tone will 
+     // automatically stop playing.
+     digitalWrite(8, LOW);
+     previousTime = millis();
+     counter = 0;
+  }
+  
 
   // After each 25-second period of over, set the time comparator to the current time
   // and reset the high counter.
-  else {
-    previousTime = currentTime;
+  if (millis() - previousTime > interval) {
+    previousTime = millis();  
     counter = 0;
 
   }
@@ -110,38 +139,4 @@ void loop() {
 
 
 
-void noiseBar(int sensorVal){
-   // Place the threshold line on the 8th box on the 2nd row
-   lcd.setCursor(10, 1);
-   lcd.write(byte(1));
-   sensorVal = max(0, min(sensorVal, 80));
-   int numBoxes = sensorVal/5;
-   for(int i = 0; i <= numBoxes; i++){
-    lcd.setCursor(i, 1);
-    lcd.write(byte(0));
-   }
-}
-
-void highNoise() {
-  int timeStart = millis();
-  
-  // Print a message telling people to be quiet
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("SHHHHHHHHHHH");
-  lcd.setCursor(0, 1);
-  lcd.print("BE QUIET!!!!"); 
-  //delay(10);
-  // Turn the LED on
-  digitalWrite(8, HIGH);
-
-  // Keep the message on the lcd screen and the led on for 15 seconds
-  while (millis() - timeStart < 15000) {
-    // play a tone to annoy people
-    tone(7, 440, 5);
-    
-    // magical wait statement
-    delay(5);
-   }
-}
 
