@@ -25,9 +25,9 @@ const int sensorPin = A0;
 const int lightPin = 8;
 const int piezoPin = 8;
 
-const int threshold = 40;//50
+const int threshold = 40;
 long counter = 0;
-const int ledThreshold = 50;//80
+const int ledThreshold = 50;
 
 unsigned long previousTime = 0;
 
@@ -61,8 +61,10 @@ void noiseBar(int sensorVal){
    // Place the threshold line on the 8th box on the 2nd row
    lcd.setCursor(10, 1);
    lcd.write(byte(1));
-   sensorVal = max(0, min(sensorVal, 80));
-   int numBoxes = sensorVal/5;
+
+   
+   sensorVal = max(0, min(sensorVal, 64));
+   int numBoxes = sensorVal/4;
    for(int i = 0; i <= numBoxes; i++){
     lcd.setCursor(i, 1);
     lcd.write(byte(0));
@@ -130,7 +132,7 @@ void listen()
     counter++;
   }
   
-  // The LED must light up for 15 seconds if 
+  // The LED must light up for 8 seconds if 
   // the sound level is exceeded for a given amount of time, in this case
   // when the counter exceeds 80. 
   if (counter > ledThreshold) {
