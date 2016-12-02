@@ -11,20 +11,29 @@
 */
 
 #include <LiquidCrystal.h>
+
+#include <Time.h>
+#include <TimeLib.h>
+
+#include <Time.h>
+
+#define TIME_MSG_LEN  11   // time sync to PC is HEADER and unix time_t as ten ascii digits
+#define TIME_HEADER  255   // Header tag for serial time sync message
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 const int sensorPin = A0;
 const int lightPin = 8;
 const int piezoPin = 8;
 
-const int threshold = 50;//50
+const int threshold = 40;//50
 long counter = 0;
-const int ledThreshold = 80;//80
+const int ledThreshold = 50;//80
 
 unsigned long previousTime = 0;
 
 long interval = 25000; //10 secs
 
+/* Create the bytes for the sound bar boxes */
 byte eight_line[8] = {
   B11111,
   B11111,
@@ -46,6 +55,7 @@ byte threshold_line[8] = {
   B00110,
   B00110,
 };
+
 
 void noiseBar(int sensorVal){
    // Place the threshold line on the 8th box on the 2nd row
@@ -71,7 +81,37 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  listen();
+  
+/*if(weekday()==1&&weekday()==7)//If day of the week is Sunday(1) or Saturday(7)
+  {
+   if(hour()>0&&hour()<10)//Quiet hours are between 12 and 10
+   {
+    listen();
+  }
+   else
+   {
+      listen();
+    }
+  }
+  else
+  {
+  if(hour()>=23||hour()<10)//Quiet hours are after 11pm or before 10am
+   {
+      listen();
+    }
+   else
+   {
+      listen();
+    }
+  }
+  
+ */
+}
 
+void listen()
+{
+  
   int sensorVal = analogRead(A0);
   Serial.println(sensorVal);
   // Normal Operations - N means the sensor value, H means the counter of high values
@@ -85,9 +125,7 @@ void loop() {
   lcd.setCursor(9, 0);
   lcd.print(counter);
   noiseBar(sensorVal);
-  
-
-  // Increase the counter if the sensor value exceeds the sound threshold
+ // Increase the counter if the sensor value exceeds the sound threshold
   if (sensorVal > threshold) {
     counter++;
   }
@@ -109,7 +147,7 @@ void loop() {
     digitalWrite(8, HIGH);
   
     // Keep the message on the lcd screen and the led on for 15 seconds
-    while (millis() - timeStart < 15000) {
+    while (millis() - timeStart < 8000) {
       // play a tone to annoy people
       tone(7, 440, 5);
       
@@ -132,9 +170,8 @@ void loop() {
     counter = 0;
 
   }
-  
-  
   delay(10);
+
 }
 
 
